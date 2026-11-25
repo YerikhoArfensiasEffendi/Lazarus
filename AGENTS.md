@@ -24,33 +24,28 @@
 
 ---
 
-## Repository Structure
+## Agentic Skill Arsenal & Libraries
 
-```text
-Lazarus/
-├── .agents/
-│   ├── environment.json                 # Cloud VM repo-scoped idempotent setup
-│   └── skills/lazarus-assistant/        # Permanent Lazarus operating skill
-│       └── SKILL.md
-├── backend/                             # Python 3.12 + uv + FastAPI + CLI + SQLite memory
-│   ├── pyproject.toml
-│   ├── lazarus/
-│   │   ├── constitution.py              # Core principles & non-harm guardrail engine
-│   │   ├── memory.py                    # SQLite persistent learning/report/adaptation store
-│   │   ├── api.py                       # FastAPI REST service
-│   │   └── cli.py                       # `lazarus` command-line interface
-│   └── tests/
-├── frontend/                            # TypeScript + pnpm + React + Vite Command Center
-│   ├── package.json
-│   └── src/
-├── AGENTS.md                            # This operating charter
-├── Makefile                             # Unified setup, test, lint, and dev targets
-└── README.md                            # Project overview & quickstart
-```
+Lazarus maintains a declarative, security-audited arsenal of top-rated GitHub agentic skills in [`skills.manifest.json`](skills.manifest.json) (synced automatically into `.agents/skills/vendor/` and `~/.agents/skills/` via `lazarus skills sync`), covering:
+- **Lazy Senior Developer**: `DietrichGebert/ponytail` (`ponytail`, `ponytail-review`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`)
+- **Superpowers Methodology**: `obra/superpowers` (planning, TDD, systematic debugging, verification, subagent-driven development, git worktrees)
+- **Senior Engineering & Editing**: `mattpocock/skills` & `addyosmani/agent-skills` (code review, simplification, codebase design, context engineering, security, performance)
+- **Document, Visual, Video & MCP Editing**: `anthropics/skills` (`docx`, `pdf`, `pptx`, `xlsx`, `doc-coauthoring`, `canvas-design`, `frontend-design`, `mcp-builder`, `webapp-testing`), `nextlevelbuilder/ui-ux-pro-max-skill`, `vercel-labs/agent-skills`, and `remotion-dev/skills`
+- **Agent Harness & Autonomy**: `affaan-m/ECC` (`agentic-engineering`, `agent-harness-construction`, `agent-eval`, `autonomous-loops`)
+- **On-Demand Mega-Hubs**: `sickn33/agentic-awesome-skills` (3,000+ skills), `VoltAgent/awesome-agent-skills` (1,000+ skills), and `ComposioHQ/awesome-claude-skills` via `lazarus skills install --repo <owner/repo> --path <skill-path>`
+
+Core Python & TypeScript agentic libraries installed in this workspace:
+- **Python (`backend/`)**: `mcp`, `pydantic-ai`, `langgraph`, `openai-agents`, `google-adk`, `crewai`, `browser-use`, `anthropic`, `openai`, `playwright`, `python-docx`, `pypdf`, `reportlab`, `python-pptx`, `openpyxl`, `pillow`, `beautifulsoup4`, `gitpython`, `tree-sitter`, `rich`
+- **TypeScript (`frontend/`)**: `ai` (Vercel AI SDK), `@modelcontextprotocol/sdk`, `@mastra/core`, `@langchain/langgraph`, `zod`
+- **System Media & Document CLIs**: `ffmpeg`, `pandoc`, `poppler-utils` (`pdftoppm`), `imagemagick` (`convert`)
+
+---
 
 ## Standard Commands
 
-- **Setup all dependencies**: `make setup`
+- **Setup dependencies & sync all 74+ Tier-S skills**: `make setup`
+- **Sync / audit skills & inspect live libraries**: `make sync-skills`, `make audit-skills`, `make libraries`
+- **Install any extra skill from GitHub on demand**: `uv run --project backend lazarus skills install --repo <owner/repo> --path <skill-path>`
 - **Run all tests**: `make test`
 - **Lint & typecheck**: `make lint`
 - **Backend CLI**: `uv run --project backend lazarus --help`

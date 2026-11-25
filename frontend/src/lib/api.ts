@@ -27,6 +27,7 @@ export interface HealthPayload {
     learnings: number;
     reports: number;
     adaptations: number;
+    skills_installed?: number;
   };
 }
 
@@ -57,6 +58,35 @@ export interface AdaptationEntry {
   created_at: string;
 }
 
+export interface SkillEntry {
+  name: string;
+  origin: "native" | "vendor";
+  category: string;
+  repo: string;
+  stars_verified: number;
+  license: string;
+  description: string;
+  audit_status: "clean" | "warning" | "flagged";
+  audit_findings_count: number;
+  path: string;
+}
+
+export interface LibraryItem {
+  package?: string;
+  binary?: string;
+  category: string;
+  role: string;
+  installed: boolean;
+  version?: string | null;
+  path?: string | null;
+}
+
+export interface LibrariesPayload {
+  python: { installed: number; total: number; items: LibraryItem[] };
+  typescript: { installed: number; total: number; items: LibraryItem[] };
+  system_tools: { installed: number; total: number; items: LibraryItem[] };
+}
+
 export const DEFAULT_API_BASE =
   (import.meta as { env?: Record<string, string | undefined> }).env?.VITE_LAZARUS_API_URL ??
   "http://127.0.0.1:8000";
@@ -64,6 +94,12 @@ export const DEFAULT_API_BASE =
 export function formatConfidence(confidence: number): string {
   const clamped = Math.max(0, Math.min(1, confidence));
   return `${Math.round(clamped * 100)}%`;
+}
+
+export function formatStars(stars: number): string {
+  if (stars <= 0) return "Core";
+  if (stars >= 1000) return `${(stars / 1000).toFixed(1)}k ★`;
+  return `${stars} ★`;
 }
 
 export function riskBadgeLabel(riskLevel: SafetyEvaluation["risk_level"]): string {
@@ -158,5 +194,14 @@ export function createLazarusClient(baseUrl = DEFAULT_API_BASE, fetchImpl: typeo
         { method: "POST", body: JSON.stringify(payload) },
         fetchImpl,
       ),
+    listSkills: (query = "", category = "") =>
+      requestJson<{ query: string; category: string; count: number; items: SkillEntry[] }>(
+        baseUrl,
+        `/skills?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}`,
+        undefined,
+        fetchImpl,
+      ),
+    getLibraries: () =>
+      requestJson<LibrariesPayload>(baseUrl, "/skills/libraries", undefined, fetchImpl),
   };
 }

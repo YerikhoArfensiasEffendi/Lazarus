@@ -11,6 +11,7 @@ import uvicorn
 from lazarus import __version__
 from lazarus.constitution import LazarusConstitution
 from lazarus.memory import KnowledgeStore
+from lazarus.skills import SkillArsenal
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -22,6 +23,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--db",
         default=None,
         help="Optional path to SQLite database (defaults to LAZARUS_DB_PATH or data/lazarus.db).",
+    )
+    parser.add_argument(
+        "--repo-root",
+        default=None,
+        help="Optional path to Lazarus repository root.",
     )
     parser.add_argument("--version", action="version", version=f"lazarus {__version__}")
 
@@ -65,6 +71,41 @@ def build_parser() -> argparse.ArgumentParser:
     adaptations_p = subparsers.add_parser("adaptations", help="List recorded adaptations.")
     adaptations_p.add_argument("--limit", type=int, default=20, help="Maximum items to return.")
 
+    skills_p = subparsers.add_parser(
+        "skills", help="Manage top-rated GitHub agentic skills, audits, and library inventory."
+    )
+    skills_sub = skills_p.add_subparsers(dest="skills_command", required=True)
+
+    sync_p = skills_sub.add_parser("sync", help="Sync curated Tier-S GitHub skill packs.")
+    sync_p.add_argument("--pack", action="append", dest="packs", help="Optional pack ID filter.")
+    sync_p.add_argument("--force", action="store_true", help="Re-download existing skills.")
+    sync_p.add_argument(
+        "--no-global-link", action="store_true", help="Skip symlinking into ~/.agents/skills."
+    )
+
+    list_p = skills_sub.add_parser("list", help="List installed agentic skills.")
+    list_p.add_argument("--category", default="", help="Filter by category.")
+    list_p.add_argument("--query", default="", help="Filter by keyword.")
+
+    search_p = skills_sub.add_parser("search", help="Search installed skills.")
+    search_p.add_argument("query", help="Search keyword.")
+
+    skills_sub.add_parser("catalog", help="Show all manifest packs and mega-hub directories.")
+    skills_sub.add_parser("audit", help="Run Lazarus safety audit across all installed skills.")
+    skills_sub.add_parser(
+        "libraries", help="Inspect live installed Python, TypeScript, and system agentic tools."
+    )
+
+    install_p = skills_sub.add_parser(
+        "install", help="Install any additional skill on-demand from GitHub."
+    )
+    install_p.add_argument("--repo", required=True, help="GitHub repo (owner/repo).")
+    install_p.add_argument("--path", required=True, help="Directory path containing SKILL.md.")
+    install_p.add_argument("--name", default=None, help="Optional local skill name.")
+    install_p.add_argument(
+        "--no-global-link", action="store_true", help="Skip symlinking into ~/.agents/skills."
+    )
+
     serve_p = subparsers.add_parser("serve", help="Run the Lazarus FastAPI HTTP server.")
     serve_p.add_argument("--host", default="127.0.0.1", help="Bind host.")
     serve_p.add_argument("--port", type=int, default=8000, help="Bind port.")
@@ -89,24 +130,62 @@ def main(argv: list[str] | None = None) -> int:
         uvicorn.run("lazarus.api:app", host=args.host, port=args.port, reload=False)
         return 0
 
+    arsenal = SkillArsenal(repo_root=args.repo_root)
+
+    if args.command == "skills":
+        if args.skills_command == "sync":
+            summary = arsenal.sync_packs(
+                pack_ids=args.packs,
+                force=args.force,
+                link_global=not args.no_global_link,
+            )
+            print(json.dumps(summary, indent=2))
+            return 0 if not summary["errors"] else 1
+        if args.skills_command == "list":
+            items = arsenal.list_installed(category=args.category, query=args.query)
+            print(json.dumps({"count": len(items), "items": items}, indent=2))
+            return 0
+        if args.skills_command == "search":
+            items = arsenal.list_installed(query=args.query)
+            print(json.dumps({"query": args.query, "count": len(items), "items": items}, indent=2))
+            return 0
+        if args.skills_command == "catalog":
+            print(json.dumps(arsenal.load_manifest(), indent=2))
+            return 0
+        if args.skills_command == "audit":
+            print(json.dumps(arsenal.audit_installed(), indent=2))
+            return 0
+        if args.skills_command == "libraries":
+            print(json.dumps(arsenal.inspect_libraries(), indent=2))
+            return 0
+        if args.skills_command == "install":
+            installed = arsenal.install_from_github(
+                repo=args.repo,
+                skill_path=args.path,
+                name=args.name,
+                link_global=not args.no_global_link,
+            )
+            print(json.dumps(installed, indent=2))
+            return 0
+
     store = KnowledgeStore(db_path=args.db)
 
     if args.command == "status":
+        stats = store.stats()
+        stats["skills_installed"] = len(arsenal.list_installed())
         payload = {
             "service": LazarusConstitution.name,
             "version": __version__,
             "db_path": str(store.db_path),
             "directives_count": len(LazarusConstitution.directives),
-            "stats": store.stats(),
+            "stats": stats,
         }
         print(json.dumps(payload, indent=2))
         return 0
 
     if args.command == "learn":
         tags = [t.strip() for t in args.tags.split(",") if t.strip()]
-        entry = store.learn(
-            topic=args.topic, content=args.content, source=args.source, tags=tags
-        )
+        entry = store.learn(topic=args.topic, content=args.content, source=args.source, tags=tags)
         print(json.dumps(entry.to_dict(), indent=2))
         return 0
 

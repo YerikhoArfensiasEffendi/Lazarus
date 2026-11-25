@@ -5,24 +5,30 @@ import {
   createLazarusClient,
   DEFAULT_API_BASE,
   formatConfidence,
+  formatStars,
   HealthPayload,
   LearningEntry,
+  LibrariesPayload,
   ReportEntry,
   riskBadgeLabel,
   SafetyEvaluation,
+  SkillEntry,
 } from "./lib/api";
 
-type TabKey = "learn" | "reports" | "adaptations" | "safety";
+type TabKey = "arsenal" | "learn" | "reports" | "adaptations" | "safety";
 
 export function App() {
   const client = useMemo(() => createLazarusClient(DEFAULT_API_BASE), []);
 
-  const [tab, setTab] = useState<TabKey>("learn");
+  const [tab, setTab] = useState<TabKey>("arsenal");
   const [health, setHealth] = useState<HealthPayload | null>(null);
   const [constitution, setConstitution] = useState<ConstitutionPayload | null>(null);
   const [learnings, setLearnings] = useState<LearningEntry[]>([]);
   const [reports, setReports] = useState<ReportEntry[]>([]);
   const [adaptations, setAdaptations] = useState<AdaptationEntry[]>([]);
+  const [skills, setSkills] = useState<SkillEntry[]>([]);
+  const [libraries, setLibraries] = useState<LibrariesPayload | null>(null);
+  const [skillQuery, setSkillQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -44,18 +50,22 @@ export function App() {
 
   const refreshAll = useCallback(async () => {
     try {
-      const [h, c, l, r, a] = await Promise.all([
+      const [h, c, l, r, a, s, libs] = await Promise.all([
         client.getHealth(),
         client.getConstitution(),
         client.listLearnings(searchQuery),
         client.listReports(),
         client.listAdaptations(),
+        client.listSkills(skillQuery),
+        client.getLibraries(),
       ]);
       setHealth(h);
       setConstitution(c);
       setLearnings(l.items);
       setReports(r.items);
       setAdaptations(a.items);
+      setSkills(s.items);
+      setLibraries(libs);
       setError(null);
     } catch (err) {
       setError(
@@ -64,7 +74,7 @@ export function App() {
           : "Unable to reach Lazarus backend API.",
       );
     }
-  }, [client, searchQuery]);
+  }, [client, searchQuery, skillQuery]);
 
   useEffect(() => {
     void refreshAll();
@@ -144,6 +154,18 @@ export function App() {
 
       <section className="metrics">
         <article className="metric-card">
+          <span>Active Agentic Skills</span>
+          <strong>{health?.stats.skills_installed ?? skills.length}</strong>
+        </article>
+        <article className="metric-card">
+          <span>Agentic Libraries Ready</span>
+          <strong>
+            {libraries
+              ? `${libraries.python.installed + libraries.typescript.installed}/${libraries.python.total + libraries.typescript.total}`
+              : "—"}
+          </strong>
+        </article>
+        <article className="metric-card">
           <span>Learnings Stored</span>
           <strong>{health?.stats.learnings ?? 0}</strong>
         </article>
@@ -151,15 +173,12 @@ export function App() {
           <span>Honest Reports</span>
           <strong>{health?.stats.reports ?? 0}</strong>
         </article>
-        <article className="metric-card">
-          <span>Adaptations Logged</span>
-          <strong>{health?.stats.adaptations ?? 0}</strong>
-        </article>
       </section>
 
       <nav className="tabs">
         {(
           [
+            ["arsenal", "Agentic Arsenal"],
             ["learn", "Knowledge Base"],
             ["reports", "Honest Reports"],
             ["adaptations", "Adaptations"],
@@ -176,6 +195,87 @@ export function App() {
           </button>
         ))}
       </nav>
+
+      {tab === "arsenal" && (
+        <section className="grid-two">
+          <div className="panel">
+            <div className="panel-head">
+              <h2>Top-Rated GitHub Skills ({skills.length})</h2>
+              <input
+                className="search"
+                value={skillQuery}
+                onChange={(e) => setSkillQuery(e.target.value)}
+                placeholder="Filter skills (ponytail, pdf...)"
+              />
+            </div>
+            <ul className="feed feed-scroll">
+              {skills.length === 0 && (
+                <li className="muted">No skills matched. Run `lazarus skills sync` to install.</li>
+              )}
+              {skills.map((skill) => (
+                <li key={skill.name} className="feed-item">
+                  <div className="feed-title">
+                    <strong>{skill.name}</strong>
+                    <span className="tag">{formatStars(skill.stars_verified)}</span>
+                  </div>
+                  <p>{skill.description || "Agentic workflow skill."}</p>
+                  <div className="tags">
+                    <span className="tag">{skill.category}</span>
+                    <span className="tag">{skill.repo}</span>
+                    <span
+                      className={`tag ${skill.audit_status === "clean" ? "tag-trait" : "tag-prohibition"}`}
+                    >
+                      AUDIT: {skill.audit_status.toUpperCase()}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="panel">
+            <h2>Installed Agentic Libraries & Media CLIs</h2>
+            <p className="muted">
+              Live runtime verification across Python (`uv`), TypeScript (`pnpm`), and editing CLIs.
+            </p>
+            <ul className="feed feed-scroll">
+              {libraries?.python.items.map((lib) => (
+                <li key={`py-${lib.package}`} className="feed-item">
+                  <div className="feed-title">
+                    <strong>{lib.package}</strong>
+                    <span className={`pill ${lib.installed ? "pill-ok" : "pill-warn"}`}>
+                      {lib.installed ? `py v${lib.version}` : "MISSING"}
+                    </span>
+                  </div>
+                  <p>{lib.role}</p>
+                </li>
+              ))}
+              {libraries?.typescript.items.map((lib) => (
+                <li key={`ts-${lib.package}`} className="feed-item">
+                  <div className="feed-title">
+                    <strong>{lib.package}</strong>
+                    <span className={`pill ${lib.installed ? "pill-ok" : "pill-warn"}`}>
+                      {lib.installed ? `ts v${lib.version}` : "MISSING"}
+                    </span>
+                  </div>
+                  <p>{lib.role}</p>
+                </li>
+              ))}
+              {libraries?.system_tools.items.map((tool) => (
+                <li key={`sys-${tool.binary}`} className="feed-item">
+                  <div className="feed-title">
+                    <strong>{tool.binary}</strong>
+                    <span className={`pill ${tool.installed ? "pill-ok" : "pill-warn"}`}>
+                      {tool.installed ? "CLI READY" : "MISSING"}
+                    </span>
+                  </div>
+                  <p>{tool.role}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {tab === "learn" && (
         <section className="grid-two">

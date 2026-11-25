@@ -1,11 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
-import { createLazarusClient, formatConfidence, riskBadgeLabel } from "./api";
+import { z } from "zod";
+import { createLazarusClient, formatConfidence, formatStars, riskBadgeLabel } from "./api";
 
-describe("Lazarus API helpers", () => {
+describe("Lazarus API helpers & TS Agentic Schema", () => {
   it("formats confidence percentages cleanly and clamps bounds", () => {
     expect(formatConfidence(0.95)).toBe("95%");
     expect(formatConfidence(1.4)).toBe("100%");
     expect(formatConfidence(-0.2)).toBe("0%");
+  });
+
+  it("formats GitHub star ratings concisely", () => {
+    expect(formatStars(198096)).toBe("198.1k ★");
+    expect(formatStars(500)).toBe("500 ★");
+    expect(formatStars(0)).toBe("Core");
   });
 
   it("maps risk levels to clear labels", () => {
@@ -14,7 +21,15 @@ describe("Lazarus API helpers", () => {
     expect(riskBadgeLabel("blocked")).toBe("BLOCKED — NON-HARM RULE");
   });
 
-  it("sends properly formatted evaluation requests", async () => {
+  it("validates agent tool schemas with Zod", () => {
+    const skillQuerySchema = z.object({
+      query: z.string().min(1),
+      category: z.string().optional(),
+    });
+    expect(skillQuerySchema.parse({ query: "ponytail" }).query).toBe("ponytail");
+  });
+
+  it("sends properly formatted evaluation and skills requests", async () => {
     const mockFetch = vi.fn(async () => ({
       ok: true,
       status: 200,

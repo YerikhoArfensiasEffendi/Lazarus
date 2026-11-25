@@ -223,6 +223,12 @@ textarea {
   gap: 0.75rem;
 }
 
+.feed-scroll {
+  max-height: 540px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
 .feed-item {
   background: var(--panel-alt);
   border: 1px solid var(--border);

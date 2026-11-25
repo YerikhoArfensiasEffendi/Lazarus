@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from lazarus import __version__
 from lazarus.constitution import LazarusConstitution
 from lazarus.memory import KnowledgeStore
+from lazarus.skills import SkillArsenal
 
 
 class LearnRequest(BaseModel):
@@ -39,15 +40,20 @@ class EvaluateActionRequest(BaseModel):
     action: str = Field(min_length=1)
 
 
-def create_app(db_path: str | Path | None = None) -> FastAPI:
+def create_app(
+    db_path: str | Path | None = None,
+    repo_root: str | Path | None = None,
+) -> FastAPI:
     store = KnowledgeStore(db_path=db_path)
+    arsenal = SkillArsenal(repo_root=repo_root)
 
     app = FastAPI(
         title="Lazarus — The Underground Office API",
         version=__version__,
         description=(
             "Loyal, honest, adaptive AI assistant core supporting continuous learning, "
-            "transparent reporting, adaptation logs, and non-harm safety guardrails."
+            "transparent reporting, adaptation logs, curated top-rated GitHub agentic skills, "
+            "live agentic library inspection, and non-harm safety guardrails."
         ),
     )
 
@@ -66,11 +72,13 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
 
     @app.get("/health")
     def health() -> dict[str, object]:
+        stats = store.stats()
+        stats["skills_installed"] = len(arsenal.list_installed())
         return {
             "status": "online",
             "service": LazarusConstitution.name,
             "version": __version__,
-            "stats": store.stats(),
+            "stats": stats,
         }
 
     @app.get("/constitution")
@@ -129,6 +137,26 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
     def list_adaptations(limit: int = Query(default=20, ge=1, le=200)) -> dict[str, object]:
         items = [entry.to_dict() for entry in store.list_adaptations(limit=limit)]
         return {"count": len(items), "items": items}
+
+    @app.get("/skills")
+    def list_skills(
+        q: str = Query(default="", description="Optional search term"),
+        category: str = Query(default="", description="Optional category filter"),
+    ) -> dict[str, object]:
+        items = arsenal.list_installed(category=category, query=q)
+        return {"query": q, "category": category, "count": len(items), "items": items}
+
+    @app.get("/skills/packs")
+    def list_skill_packs() -> dict[str, object]:
+        return arsenal.load_manifest()
+
+    @app.get("/skills/audit")
+    def audit_skills() -> dict[str, object]:
+        return arsenal.audit_installed()
+
+    @app.get("/skills/libraries")
+    def inspect_libraries() -> dict[str, object]:
+        return arsenal.inspect_libraries()
 
     return app
 
