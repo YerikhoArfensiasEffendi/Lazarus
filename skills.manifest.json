@@ -1,0 +1,196 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Curated top-rated GitHub agentic skills & mega-hub catalog for Lazarus — The Underground Office.",
+  "packs": [
+    {
+      "id": "ponytail-lazy-dev",
+      "repo": "DietrichGebert/ponytail",
+      "stars_verified": 198096,
+      "license": "MIT",
+      "category": "lazy-developer",
+      "summary": "Makes your AI agent think like the laziest senior dev in the room — smallest complete change, zero bloat.",
+      "skills": [
+        { "name": "ponytail", "path": "skills/ponytail" },
+        { "name": "ponytail-review", "path": "skills/ponytail-review" },
+        { "name": "ponytail-audit", "path": "skills/ponytail-audit" },
+        { "name": "ponytail-debt", "path": "skills/ponytail-debt" },
+        { "name": "ponytail-gain", "path": "skills/ponytail-gain" }
+      ]
+    },
+    {
+      "id": "obra-superpowers",
+      "repo": "obra/superpowers",
+      "stars_verified": 325859,
+      "license": "MIT",
+      "category": "agentic-methodology",
+      "summary": "Complete software development methodology for coding agents: planning, TDD, systematic debugging, subagents, verification.",
+      "skills": [
+        { "name": "brainstorming", "path": "skills/brainstorming" },
+        { "name": "writing-plans", "path": "skills/writing-plans" },
+        { "name": "executing-plans", "path": "skills/executing-plans" },
+        { "name": "test-driven-development", "path": "skills/test-driven-development" },
+        { "name": "systematic-debugging", "path": "skills/systematic-debugging" },
+        { "name": "verification-before-completion", "path": "skills/verification-before-completion" },
+        { "name": "subagent-driven-development", "path": "skills/subagent-driven-development" },
+        { "name": "dispatching-parallel-agents", "path": "skills/dispatching-parallel-agents" },
+        { "name": "requesting-code-review", "path": "skills/requesting-code-review" },
+        { "name": "receiving-code-review", "path": "skills/receiving-code-review" },
+        { "name": "using-git-worktrees", "path": "skills/using-git-worktrees" },
+        { "name": "finishing-a-development-branch", "path": "skills/finishing-a-development-branch" },
+        { "name": "writing-skills", "path": "skills/writing-skills" }
+      ]
+    },
+    {
+      "id": "mattpocock-skills",
+      "repo": "mattpocock/skills",
+      "stars_verified": 332215,
+      "license": "MIT",
+      "category": "engineering-editing",
+      "summary": "Top-rated real-world senior engineering, codebase design, bug diagnosis, research, and agent-writing skills.",
+      "skills": [
+        { "name": "code-review", "path": "skills/engineering/code-review" },
+        { "name": "codebase-design", "path": "skills/engineering/codebase-design" },
+        { "name": "diagnosing-bugs", "path": "skills/engineering/diagnosing-bugs" },
+        { "name": "domain-modeling", "path": "skills/engineering/domain-modeling" },
+        { "name": "implement-spec", "path": "skills/engineering/implement-spec" },
+        { "name": "improve-codebase-architecture", "path": "skills/engineering/improve-codebase-architecture" },
+        { "name": "research", "path": "skills/engineering/research" },
+        { "name": "tdd", "path": "skills/engineering/tdd" },
+        { "name": "to-spec", "path": "skills/engineering/to-spec" },
+        { "name": "grill-me", "path": "skills/productivity/grill-me" },
+        { "name": "writing-for-agents", "path": "skills/productivity/writing-for-agents" }
+      ]
+    },
+    {
+      "id": "addyosmani-agent-skills",
+      "repo": "addyosmani/agent-skills",
+      "stars_verified": 120217,
+      "license": "MIT",
+      "category": "production-engineering",
+      "summary": "Production-grade software engineering, context engineering, code simplification, security, and performance skills.",
+      "skills": [
+        { "name": "code-simplification", "path": "skills/code-simplification" },
+        { "name": "code-review-and-quality", "path": "skills/code-review-and-quality" },
+        { "name": "context-engineering", "path": "skills/context-engineering" },
+        { "name": "debugging-and-error-recovery", "path": "skills/debugging-and-error-recovery" },
+        { "name": "performance-optimization", "path": "skills/performance-optimization" },
+        { "name": "security-and-hardening", "path": "skills/security-and-hardening" },
+        { "name": "spec-driven-development", "path": "skills/spec-driven-development" },
+        { "name": "api-and-interface-design", "path": "skills/api-and-interface-design" },
+        { "name": "frontend-ui-engineering", "path": "skills/frontend-ui-engineering" },
+        { "name": "browser-testing-with-devtools", "path": "skills/browser-testing-with-devtools" },
+        { "name": "ci-cd-and-automation", "path": "skills/ci-cd-and-automation" }
+      ]
+    },
+    {
+      "id": "anthropics-official-skills",
+      "repo": "anthropics/skills",
+      "stars_verified": 200004,
+      "license": "Apache-2.0",
+      "category": "document-media-editing",
+      "summary": "Official Anthropic skills for document editing (DOCX/PDF/PPTX/XLSX), visual canvas design, frontend design, MCP building, and webapp testing.",
+      "skills": [
+        { "name": "docx", "path": "skills/docx" },
+        { "name": "pdf", "path": "skills/pdf" },
+        { "name": "pptx", "path": "skills/pptx" },
+        { "name": "xlsx", "path": "skills/xlsx" },
+        { "name": "doc-coauthoring", "path": "skills/doc-coauthoring" },
+        { "name": "frontend-design", "path": "skills/frontend-design" },
+        { "name": "canvas-design", "path": "skills/canvas-design" },
+        { "name": "mcp-builder", "path": "skills/mcp-builder" },
+        { "name": "webapp-testing", "path": "skills/webapp-testing" },
+        { "name": "skill-creator", "path": "skills/skill-creator" }
+      ]
+    },
+    {
+      "id": "affaan-ecc-agentic",
+      "repo": "affaan-m/ECC",
+      "stars_verified": 310232,
+      "license": "MIT",
+      "category": "agentic-harness",
+      "summary": "Agent harness engineering, autonomous loops, architecture audits, agent evaluations, and security hardening.",
+      "skills": [
+        { "name": "agentic-engineering", "path": "skills/agentic-engineering" },
+        { "name": "agent-harness-construction", "path": "skills/agent-harness-construction" },
+        { "name": "agent-architecture-audit", "path": "skills/agent-architecture-audit" },
+        { "name": "agent-security-hardening", "path": "skills/agent-security-hardening" },
+        { "name": "agent-eval", "path": "skills/agent-eval" },
+        { "name": "autonomous-loops", "path": "skills/autonomous-loops" },
+        { "name": "backend-patterns", "path": "skills/backend-patterns" },
+        { "name": "api-design", "path": "skills/api-design" },
+        { "name": "browser-qa", "path": "skills/browser-qa" }
+      ]
+    },
+    {
+      "id": "ui-ux-pro-max",
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "stars_verified": 153779,
+      "license": "MIT",
+      "category": "ui-ux-editing",
+      "summary": "High-craft UI/UX design intelligence, design systems, styling, slides, brand, and banner editing.",
+      "skills": [
+        { "name": "ui-ux-pro-max", "path": ".claude/skills/ui-ux-pro-max" },
+        { "name": "design-system", "path": ".claude/skills/design-system" },
+        { "name": "ui-styling", "path": ".claude/skills/ui-styling" },
+        { "name": "banner-design", "path": ".claude/skills/banner-design" },
+        { "name": "slides", "path": ".claude/skills/slides" },
+        { "name": "brand", "path": ".claude/skills/brand" }
+      ]
+    },
+    {
+      "id": "vercel-agent-skills",
+      "repo": "vercel-labs/agent-skills",
+      "stars_verified": 34873,
+      "license": "MIT",
+      "category": "web-frontend",
+      "summary": "Official Vercel React best practices, composition patterns, web design, and writing guidelines.",
+      "skills": [
+        { "name": "react-best-practices", "path": "skills/react-best-practices" },
+        { "name": "composition-patterns", "path": "skills/composition-patterns" },
+        { "name": "web-design-guidelines", "path": "skills/web-design-guidelines" },
+        { "name": "writing-guidelines", "path": "skills/writing-guidelines" }
+      ]
+    },
+    {
+      "id": "remotion-video-editing",
+      "repo": "remotion-dev/skills",
+      "stars_verified": 7960,
+      "license": "Remotion-Official",
+      "category": "video-media-editing",
+      "summary": "Official Remotion skills for programmatic video creation, multimedia editing, captions, and rendering.",
+      "skills": [
+        { "name": "remotion-best-practices", "path": "skills/remotion-best-practices" },
+        { "name": "remotion-create", "path": "skills/remotion-create" },
+        { "name": "remotion-multimedia", "path": "skills/remotion-multimedia" },
+        { "name": "remotion-captions", "path": "skills/remotion-captions" },
+        { "name": "remotion-render", "path": "skills/remotion-render" }
+      ]
+    }
+  ],
+  "mega_hubs": [
+    {
+      "id": "agentic-awesome-skills",
+      "repo": "sickn33/agentic-awesome-skills",
+      "stars_verified": 50274,
+      "license": "MIT",
+      "skill_count_approx": "3,000+",
+      "description": "Massive community catalog of reusable AI agent skills. Install any skill on demand with `lazarus skills install --repo sickn33/agentic-awesome-skills --path <skill-path>`."
+    },
+    {
+      "id": "voltagent-awesome-agent-skills",
+      "repo": "VoltAgent/awesome-agent-skills",
+      "stars_verified": 37523,
+      "license": "MIT",
+      "skill_count_approx": "1,000+",
+      "description": "Curated official dev-team agent skills directory from engineering teams."
+    },
+    {
+      "id": "composio-awesome-claude-skills",
+      "repo": "ComposioHQ/awesome-claude-skills",
+      "stars_verified": 80255,
+      "license": "Community",
+      "skill_count_approx": "Curated index",
+      "description": "Curated index of top agent skills, MCP tools, and editing/automation workflows."
+    }
+  ]
+}
