@@ -120,6 +120,21 @@ PYTHON_AGENTIC_LIBRARIES: list[dict[str, str]] = [
         "role": "AST-level multi-language code analysis & editing",
     },
     {"package": "rich", "category": "reporting", "role": "Structured terminal UI & reporting"},
+    {
+        "package": "faster-whisper",
+        "category": "voice-stt",
+        "role": "Local fast offline Speech-to-Text (Indonesian + English)",
+    },
+    {
+        "package": "edge-tts",
+        "category": "voice-tts",
+        "role": "Natural Indonesian/English neural TTS (zero API key)",
+    },
+    {
+        "package": "piper-tts",
+        "category": "voice-tts",
+        "role": "100% offline local neural TTS for laptop CPU",
+    },
 ]
 
 TYPESCRIPT_AGENTIC_LIBRARIES: list[dict[str, str]] = [

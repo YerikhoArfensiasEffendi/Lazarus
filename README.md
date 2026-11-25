@@ -62,12 +62,17 @@ lazarus learn --topic "Agentic Arsenal" --content "75 skill & 25 library aktif t
 lazarus report --title "Arsenal Audit" --summary "Seluruh skill & library lulus verifikasi." --confidence 0.98
 ```
 
-### Menjalankan API & Command Center
+### Menjalankan API, Command Center & Discord Voice Assistant
 
 ```bash
-# Terminal 1 — FastAPI backend (http://127.0.0.1:8000)
+# Terminal 1 — FastAPI backend + Local Whisper STT + Skill Brain + TTS (http://127.0.0.1:8000)
 make dev-backend
 
-# Terminal 2 — React Command Center (http://127.0.0.1:5173)
+# Terminal 2 — Lazarus Discord Voice (DAVE E2EE) & DM Bot
+make dev-discord
+
+# Terminal 3 (opsional) — React Command Center (http://127.0.0.1:5173)
 make dev-frontend
 ```
+
+Untuk panduan lengkap menjalankan Lazarus Voice Assistant lokal di laptop Anda (join Voice Channel Discord, ngobrol santai 2 arah, dan otomatis kirim data/kode/file ke Chat DM Discord), lihat [`docs/DISCORD_VOICE_SETUP.md`](docs/DISCORD_VOICE_SETUP.md).

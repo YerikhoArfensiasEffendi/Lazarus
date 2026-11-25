@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
+import asyncio
+import base64
 from dataclasses import asdict
 from pathlib import Path
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, File, Form, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from lazarus import __version__
+from lazarus.brain import LazarusBrain
 from lazarus.constitution import LazarusConstitution
 from lazarus.memory import KnowledgeStore
 from lazarus.skills import SkillArsenal
+from lazarus.voice import LazarusTTS, LocalWhisperSTT
 
 
 class LearnRequest(BaseModel):
@@ -40,12 +44,29 @@ class EvaluateActionRequest(BaseModel):
     action: str = Field(min_length=1)
 
 
+class BrainChatRequest(BaseModel):
+    user_id: str = Field(default="creator", min_length=1, max_length=120)
+    username: str = Field(default="Creator", max_length=120)
+    message: str = Field(min_length=1)
+    voice_mode: bool = Field(default=False)
+
+
+class TTSRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)
+
+
 def create_app(
     db_path: str | Path | None = None,
     repo_root: str | Path | None = None,
+    brain: LazarusBrain | None = None,
+    stt: LocalWhisperSTT | None = None,
+    tts: LazarusTTS | None = None,
 ) -> FastAPI:
     store = KnowledgeStore(db_path=db_path)
     arsenal = SkillArsenal(repo_root=repo_root)
+    brain_engine = brain or LazarusBrain(store=store, arsenal=arsenal)
+    stt_engine = stt or LocalWhisperSTT()
+    tts_engine = tts or LazarusTTS()
 
     app = FastAPI(
         title="Lazarus — The Underground Office API",
@@ -53,7 +74,8 @@ def create_app(
         description=(
             "Loyal, honest, adaptive AI assistant core supporting continuous learning, "
             "transparent reporting, adaptation logs, curated top-rated GitHub agentic skills, "
-            "live agentic library inspection, and non-harm safety guardrails."
+            "live agentic library inspection, local Discord voice + DM assistant, and non-harm "
+            "safety guardrails."
         ),
     )
 
@@ -157,6 +179,106 @@ def create_app(
     @app.get("/skills/libraries")
     def inspect_libraries() -> dict[str, object]:
         return arsenal.inspect_libraries()
+
+    @app.post("/brain/chat")
+    async def brain_chat(payload: BrainChatRequest) -> dict[str, object]:
+        response = await brain_engine.respond(
+            user_id=payload.user_id,
+            message=payload.message,
+            username=payload.username,
+            voice_mode=payload.voice_mode,
+        )
+        return response.to_dict()
+
+    @app.get("/voice/status")
+    async def voice_status() -> dict[str, object]:
+        llm_health = await brain_engine.check_llm_health()
+        return {
+            "stt": {
+                "engine": f"faster-whisper:{stt_engine.model_size}",
+                "device": stt_engine.device,
+                "language": stt_engine.language or "auto",
+            },
+            "tts": tts_engine.status(),
+            "llm": llm_health,
+            "skills_available": len(arsenal.list_installed()),
+        }
+
+    @app.post("/voice/tts")
+    async def synthesize_tts(payload: TTSRequest) -> dict[str, object]:
+        synth = await tts_engine.synthesize(payload.text)
+        return {
+            "engine": synth.engine,
+            "voice": synth.voice,
+            "mime_type": synth.mime_type,
+            "duration_ms": synth.duration_ms,
+            "audio_base64": base64.b64encode(synth.audio_bytes).decode("ascii"),
+        }
+
+    @app.post("/voice/turn")
+    async def voice_turn(
+        audio: UploadFile = File(...),  # noqa: B008
+        user_id: str = Form(default="creator"),
+        username: str = Form(default="Creator"),
+    ) -> dict[str, object]:
+        raw_bytes = await audio.read()
+        suffix = Path(audio.filename or "speech.wav").suffix or ".wav"
+        stt_res = await asyncio.to_thread(stt_engine.transcribe_bytes, raw_bytes, suffix)
+
+        if not stt_res.text:
+            return {
+                "transcript": "",
+                "language": stt_res.language,
+                "spoken_reply": "",
+                "audio_base64": "",
+                "audio_mime": "audio/mpeg",
+                "should_send_dm": False,
+                "dm_title": "",
+                "dm_content": "",
+                "dm_attachment": None,
+                "matched_skills": [],
+                "timings_ms": {"stt": stt_res.duration_ms, "brain": 0, "tts": 0},
+            }
+
+        brain_res = await brain_engine.respond(
+            user_id=user_id,
+            message=stt_res.text,
+            username=username,
+            voice_mode=True,
+        )
+
+        audio_b64 = ""
+        audio_mime = "audio/mpeg"
+        tts_ms = 0
+        tts_error: str | None = None
+        try:
+            synth = await tts_engine.synthesize(brain_res.spoken_reply)
+            audio_b64 = base64.b64encode(synth.audio_bytes).decode("ascii")
+            audio_mime = synth.mime_type
+            tts_ms = synth.duration_ms
+        except Exception as exc:  # noqa: BLE001
+            tts_error = str(exc)
+
+        return {
+            "transcript": stt_res.text,
+            "language": stt_res.language,
+            "spoken_reply": brain_res.spoken_reply,
+            "audio_base64": audio_b64,
+            "audio_mime": audio_mime,
+            "tts_error": tts_error,
+            "should_send_dm": brain_res.should_send_dm,
+            "dm_title": brain_res.dm_title,
+            "dm_content": brain_res.dm_content,
+            "dm_attachment": asdict(brain_res.dm_attachment) if brain_res.dm_attachment else None,
+            "matched_skills": brain_res.matched_skills,
+            "provider": brain_res.provider,
+            "model": brain_res.model,
+            "timings_ms": {
+                "stt": stt_res.duration_ms,
+                "brain": brain_res.latency_ms,
+                "tts": tts_ms,
+            },
+        }
 
     return app
 

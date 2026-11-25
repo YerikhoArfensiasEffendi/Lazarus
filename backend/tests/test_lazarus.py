@@ -222,3 +222,99 @@ def test_cli_roundtrip(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> No
     assert cli_main(["check", "harm the creator"]) == 2
     blocked = json.loads(capsys.readouterr().out)
     assert blocked["risk_level"] == "blocked"
+
+
+def test_clean_text_for_speech_strips_markdown_and_code() -> None:
+    from lazarus.voice import clean_text_for_speech
+
+    raw = "**Halo!** Ini kodenya:\n```python\nprint('hi')\n```\nLihat https://example.com"
+    spoken = clean_text_for_speech(raw)
+    assert "```" not in spoken
+    assert "https://" not in spoken
+    assert "DM Discord" in spoken
+
+
+def test_brain_skill_routing_and_voice_turn_endpoint(tmp_path: Path) -> None:
+    from lazarus.brain import LazarusBrain
+    from lazarus.voice import SynthesisResult, TranscriptionResult
+
+    class FakeSTT:
+        model_size = "small"
+        device = "cpu"
+        language = "id"
+
+        def transcribe_bytes(self, audio_bytes: bytes, suffix: str = ".wav") -> TranscriptionResult:
+            assert len(audio_bytes) > 0
+            return TranscriptionResult(
+                text="Tolong bantu debug error python lalu kirim kode ke DM",
+                language="id",
+                duration_ms=120,
+                engine="fake-whisper",
+            )
+
+    class FakeTTS:
+        async def synthesize(self, text: str) -> SynthesisResult:
+            return SynthesisResult(
+                audio_bytes=b"FAKE_MP3_AUDIO",
+                mime_type="audio/mpeg",
+                engine="fake-tts",
+                voice="id-ID-ArdiNeural",
+                duration_ms=45,
+            )
+
+        def status(self) -> dict[str, object]:
+            return {"provider": "fake", "voice": "id-ID-ArdiNeural", "piper_model_ready": False}
+
+    store = KnowledgeStore(db_path=tmp_path / "voice.db")
+    arsenal = SkillArsenal()
+
+    class MockBrain(LazarusBrain):
+        async def _call_llm(self, messages: list[dict[str, str]]) -> str:
+            return json.dumps(
+                {
+                    "spoken_reply": (
+                        "Siap, penyebab bug-nya sudah ketemu dan kodenya saya kirim ke DM."
+                    ),
+                    "should_send_dm": True,
+                    "dm_title": "Perbaikan Bug Python",
+                    "dm_content": "```python\nprint('fixed')\n```",
+                    "attachment_filename": "fix.py",
+                    "attachment_content": "print('fixed')\n",
+                    "learn_topic": "Discord Voice Debug",
+                    "learn_content": "User tested voice debug flow successfully.",
+                }
+            )
+
+    brain = MockBrain(store=store, arsenal=arsenal)
+    selected = [s["name"] for s in brain.select_skills("tolong pakai gaya lazy developer simple")]
+    assert "ponytail" in selected
+
+    app = create_app(
+        db_path=tmp_path / "voice.db",
+        brain=brain,
+        stt=FakeSTT(),  # type: ignore[arg-type]
+        tts=FakeTTS(),  # type: ignore[arg-type]
+    )
+    client = TestClient(app)
+
+    status_resp = client.get("/voice/status")
+    assert status_resp.status_code == 200
+    assert status_resp.json()["stt"]["engine"] == "faster-whisper:small"
+
+    tts_resp = client.post("/voice/tts", json={"text": "Halo dari Lazarus!"})
+    assert tts_resp.status_code == 200
+    assert tts_resp.json()["audio_base64"] != ""
+
+    turn_resp = client.post(
+        "/voice/turn",
+        files={"audio": ("turn.wav", b"RIFF0000WAVEfmt ", "audio/wav")},
+        data={"user_id": "12345", "username": "Yerikho"},
+    )
+    assert turn_resp.status_code == 200
+    body = turn_resp.json()
+    assert "debug error python" in body["transcript"]
+    assert body["should_send_dm"] is True
+    assert body["dm_attachment"]["filename"] == "fix.py"
+    assert body["audio_base64"] != ""
+    assert any("debug" in s or "bug" in s for s in body["matched_skills"])
+    assert store.stats()["learnings"] == 1
