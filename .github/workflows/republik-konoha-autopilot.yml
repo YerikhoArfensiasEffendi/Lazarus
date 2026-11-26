@@ -1,0 +1,45 @@
+name: Republik Konoha Autopilot
+
+on:
+  schedule:
+    # Run hourly at :17 UTC to avoid :00 queue spikes and never miss 2h work or 24h salary/property windows.
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Simulasi saja (tanpa klaim/beli sungguhan)"
+        type: boolean
+        default: false
+      auto_upgrade:
+        description: "Aktifkan AI auto-upgrade & beli properti"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: republik-konoha-autopilot
+  cancel-in-progress: false
+
+jobs:
+  autopilot:
+    name: Auto-Claim & AI Upgrade
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Republik Konoha Autopilot
+        env:
+          RK_KTP_CODE: ${{ secrets.RK_KTP_CODE }}
+          RK_PIN: ${{ secrets.RK_PIN }}
+          RK_DRY_RUN: ${{ inputs.dry_run }}
+          RK_AUTO_UPGRADE: ${{ inputs.auto_upgrade }}
+        run: python3 automations/republik_konoha/autopilot.py
