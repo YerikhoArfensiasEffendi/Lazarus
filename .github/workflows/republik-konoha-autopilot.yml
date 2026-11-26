@@ -2,8 +2,8 @@ name: Republik Konoha Autopilot
 
 on:
   schedule:
-    # Run hourly at :17 UTC to avoid :00 queue spikes and never miss 2h work or 24h salary/property windows.
-    - cron: "17 * * * *"
+    # Run twice hourly off the top-of-hour (:13 and :43 UTC) to absorb GitHub Actions cron delays/drops.
+    - cron: "13,43 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:
